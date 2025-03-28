@@ -49,11 +49,24 @@ const editMenu = async (req, res) => {
         const file = req.file;
         const menu = await menu_model_1.Menu.findById(id);
         if (!menu) {
-            return res.status(404).json({
-                success: false,
-                message: "Menu not found",
-            });
+            throw new Error("Menu not found");
         }
+        if (name)
+            menu.name = name;
+        if (description)
+            menu.description = description;
+        if (price)
+            menu.price = price;
+        if (file) {
+            const imageUrl = await (0, imageUpload_1.default)(file);
+            menu.image = imageUrl;
+        }
+        await menu.save();
+        return res.status(200).json({
+            success: true,
+            message: "Menu updated",
+            menu,
+        });
     }
     catch (error) {
         console.log(error);

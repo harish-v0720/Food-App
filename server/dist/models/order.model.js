@@ -9,7 +9,7 @@ const orderSchema = new mongoose_1.default.Schema({
     user: {
         type: mongoose_1.default.Schema.Types.ObjectId,
         ref: "User",
-        required: true
+        required: true,
     },
     restaurant: {
         type: mongoose_1.default.Schema.Types.ObjectId,
@@ -29,13 +29,19 @@ const orderSchema = new mongoose_1.default.Schema({
             image: { type: String, required: true },
             price: { type: Number, required: true },
             quantity: { type: Number, required: true },
-        }
+        },
     ],
     totalAmount: Number,
     status: {
         type: String,
-        enum: ["pending", "confirmed", "preparing", "outfordelivery", "delivered"],
+        enum: [
+            "pending",
+            "confirmed",
+            "preparing",
+            "outfordelivery",
+            "delivered",
+        ],
         required: true,
-    }
+    },
 }, { timestamps: true });
 exports.Order = mongoose_1.default.model("Order", orderSchema);

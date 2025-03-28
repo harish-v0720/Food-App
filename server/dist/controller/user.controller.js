@@ -13,7 +13,8 @@ const generateToken_1 = require("../utils/generateToken");
 const email_1 = require("../mailtrap/email");
 const signup = async (req, res) => {
     try {
-        const { fullName, email, password, contact } = req.body;
+        const { fullName, email, password, contact, admin } = req.body;
+        console.log(fullName, email, password, contact, admin);
         let user = await user_model_1.default.findOne({ email });
         if (user) {
             return res.status(400).json({
@@ -28,6 +29,7 @@ const signup = async (req, res) => {
             email,
             password: hashedPassword,
             contact: Number(contact),
+            admin,
             verificationToken,
             verificationTokenExpiresAt: Date.now() + 24 * 60 * 60 * 1000,
         });
@@ -38,7 +40,7 @@ const signup = async (req, res) => {
             .select("-password");
         return res.status(201).json({
             success: true,
-            message: "Account created successfully",
+            message: "Account created. Please verify your email",
             user: userWithoutPassword,
         });
     }
@@ -54,12 +56,14 @@ const login = async (req, res) => {
         const user = await user_model_1.default.findOne({ email });
         if (!user) {
             return res
-                .status(400).json({ success: false, message: "Incorrect Email" });
+                .status(400)
+                .json({ success: false, message: "Incorrect Email" });
         }
         const isPasswordMatch = await bcryptjs_1.default.compare(password, user.password);
         if (!isPasswordMatch) {
             return res
-                .status(400).json({ success: false, message: "Incorrect Password" });
+                .status(400)
+                .json({ success: false, message: "Incorrect Password" });
         }
         (0, generateToken_1.generateToken)(res, user);
         user.lastLogin = new Date();
@@ -83,11 +87,16 @@ exports.login = login;
 const verifyEmail = async (req, res) => {
     try {
         const { verificationCode } = req.body;
-        const user = await user_model_1.default.findOne({ verificationToken: verificationCode, verificationTokenExpiresAt: { $gt: Date.now() } }).select("-password");
+        const user = await user_model_1.default
+            .findOne({
+            verificationToken: verificationCode,
+            verificationTokenExpiresAt: { $gt: Date.now() },
+        })
+            .select("-password");
         if (!user) {
             return res.status(400).json({
                 success: false,
-                message: "Invalid or expired verification token"
+                message: "Invalid or expired verification token",
             });
         }
         user.isVerified = true;
@@ -128,19 +137,19 @@ const forgotPassword = async (req, res) => {
         if (!user) {
             return res.status(400).json({
                 success: true,
-                message: "User doesn't exist"
+                message: "User doesn't exist",
             });
         }
-        const resetToken = crypto_1.default.randomBytes(40).toString('hex');
-        const resetPasswordTokenExpiresAt = new Date(Date.now() + 1 * 60 * 60 * 1000); //1HR
+        const resetToken = crypto_1.default.randomBytes(40).toString("hex");
+        const resetTokenExpiresAt = new Date(Date.now() + 1 * 60 * 60 * 1000); //1HR
         user.resetPasswordToken = resetToken;
-        user.resetPasswordTokenExpiresAt = resetPasswordTokenExpiresAt;
+        user.resetPasswordTokenExpiresAt = resetTokenExpiresAt;
         await user.save();
         // send email
         await (0, email_1.sendPasswordResetEmail)(user.email, `${process.env.FRONTEND_URL}/resetpassword/${resetToken}`);
         return res.status(200).json({
             success: true,
-            message: "Password reset link sent to your email"
+            message: "Password reset link sent to your email",
         });
     }
     catch (error) {
@@ -153,11 +162,14 @@ const resetPassword = async (req, res) => {
     try {
         const { token } = req.params;
         const { newPassword } = req.body;
-        const user = await user_model_1.default.findOne({ resetPasswordToken: token, resetPasswordTokenExpiresAt: { $gt: Date.now() } });
+        const user = await user_model_1.default.findOne({
+            resetPasswordToken: token,
+            resetPasswordTokenExpiresAt: { $gt: Date.now() },
+        });
         if (!user) {
             return res.status(400).json({
                 success: false,
-                message: "Invalid or expired verification token"
+                message: "Invalid or expired verification token",
             });
         }
         // update password
@@ -181,17 +193,19 @@ const resetPassword = async (req, res) => {
 exports.resetPassword = resetPassword;
 const checkAuth = async (req, res) => {
     try {
+        console.log(req.id);
         const userId = req.id;
         const user = await user_model_1.default.findById(userId).select("-password");
+        console.log(user);
         if (!user) {
             return res.status(404).json({
                 success: false,
-                message: "User not found"
+                message: "User not found",
             });
         }
         return res.status(200).json({
             success: true,
-            user
+            user,
         });
     }
     catch (error) {
@@ -204,16 +218,26 @@ const updateProfile = async (req, res) => {
     try {
         const userId = req.id;
         const { fullName, email, address, city, country, profilePicture } = req.body;
-        // uoload image on cloudinary 
+        // uoload image on cloudinary
         let cloudResponse;
         try {
+            console.log(fullName, email, address, city, country);
             cloudResponse = await cloudinary_1.default.uploader.upload(profilePicture);
-            const updatedData = { fullName, email, address, city, country, profilePicture };
-            const user = await user_model_1.default.findByIdAndUpdate(userId, updatedData, { new: true }).select("-password");
+            const updatedData = {
+                fullName,
+                email,
+                address,
+                city,
+                country,
+                profilePicture,
+            };
+            const user = await user_model_1.default
+                .findByIdAndUpdate(userId, updatedData, { new: true })
+                .select("-password");
             return res.status(200).json({
                 success: true,
                 user,
-                message: "Profile updated successfully"
+                message: "Profile updated successfully",
             });
         }
         catch (error) {

@@ -12,9 +12,18 @@ import {
 } from "./ui/table";
 import { useState } from "react";
 import CheckoutConfirmPage from "./CheckoutConfirmPage";
+import { useCartStore } from "@/store/useCartStore";
+import { CartItem } from "@/types/cartType";
+import useRestaurantStore from "@/store/useRestaurantStore";
+
 
 const Cart = () => {
-  const [open, setOpen] = useState<boolean>(false)
+  const [open, setOpen] = useState<boolean>(false);
+  const {cart,decrementQuantity, incrementQuantity, removeFromCart} =useCartStore();
+  
+   let totalAmount = cart.reduce((acc,ele) => {
+    return acc + ele.price * ele.quantity
+  },0)
   return (
     <div className="flex flex-col max-w-7xl mx-auto my-10">
       <div className="flex justify-end">
@@ -32,53 +41,60 @@ const Cart = () => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          <TableRow>
-            <TableCell>
-              <Avatar>
-                <AvatarImage src="" />
-                <AvatarFallback>VH</AvatarFallback>
-              </Avatar>
-            </TableCell>
-            <TableCell>Full meals</TableCell>
-            <TableCell>140</TableCell>
-            <TableCell>
-              <div className="w-fit flex items-center rounded-full border border-gray-100 dark:border-gray-800 shadow-md">
-                <Button
-                  size={"icon"}
-                  variant={"outline"}
-                  className="rounded-full bg-gray-200"
-                >
-                  <Minus />
+          {
+            cart.map((item:CartItem) => (
+              <TableRow>
+              <TableCell>
+                <Avatar>
+                  <AvatarImage src={item.image} />
+                  <AvatarFallback>VH</AvatarFallback>
+                </Avatar>
+              </TableCell>
+              <TableCell>{item.name}</TableCell>
+              <TableCell>{item.price}</TableCell>
+              <TableCell>
+                <div className="w-fit flex items-center rounded-full border border-gray-100 dark:border-gray-800 shadow-md">
+                  <Button
+                   onClick={()=> decrementQuantity(item._id)}
+                    size={"icon"}
+                    variant={"outline"}
+                    className="rounded-full bg-gray-200"
+                  >
+                    <Minus />
+                  </Button>
+                  <Button
+                    size={"icon"}
+                    variant={"outline"}
+                    className="font-bold border-none "
+                    disabled
+                  >
+                    {item.quantity}
+                  </Button>
+                  <Button
+                    onClick={()=> incrementQuantity(item._id)}
+                    size={"icon"}
+                    variant={"outline"}
+                    className="rounded-full bg-orange hover:bg-hoverOrange "
+                  >
+                    <Plus />
+                  </Button>
+                </div>
+              </TableCell>
+              <TableCell>{item.price * item.quantity }</TableCell>
+              <TableCell className="text-right">
+                <Button onClick={()=>removeFromCart(item._id)} className="bg-orange hover:bg-hoverOrange ">
+                  Remove
                 </Button>
-                <Button
-                  size={"icon"}
-                  variant={"outline"}
-                  className="font-bold border-none "
-                  disabled
-                >
-                  1
-                </Button>
-                <Button
-                  size={"icon"}
-                  variant={"outline"}
-                  className="rounded-full bg-orange hover:bg-hoverOrange "
-                >
-                  <Plus />
-                </Button>
-              </div>
-            </TableCell>
-            <TableCell>140 </TableCell>
-            <TableCell className="text-right">
-              <Button className="bg-orange hover:bg-hoverOrange ">
-                Remove
-              </Button>
-            </TableCell>
-          </TableRow>
+              </TableCell>
+            </TableRow>
+            ))
+          }
+          
         </TableBody>
         <TableFooter>
           <TableRow className="text-2xl font-bold">
             <TableCell colSpan={5}>Total</TableCell>
-            <TableCell className="text-right">140</TableCell>
+            <TableCell className="text-right">{totalAmount}</TableCell>
           </TableRow>
         </TableFooter>
       </Table>

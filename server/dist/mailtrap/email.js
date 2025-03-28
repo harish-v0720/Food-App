@@ -5,14 +5,13 @@ const htmlEmail_1 = require("./htmlEmail");
 const mailtrap_1 = require("./mailtrap");
 const sendVerificationEmail = async (email, verificationToken) => {
     const recipient = [{ email }];
-    const htmlContent = "<p>Click here to verify: {verificationToken}</p>";
     try {
         const res = await mailtrap_1.client.send({
             from: mailtrap_1.sender,
             to: recipient,
-            subject: 'Verify ypu email',
-            html: htmlContent.replace("{verificationToken}", verificationToken),
-            category: 'Email Verification'
+            subject: "Verify your email",
+            html: htmlEmail_1.htmlContent.replace("{verificationToken}", verificationToken),
+            category: "Email Verification",
         });
     }
     catch (error) {
@@ -28,12 +27,12 @@ const sendWelcomeEmail = async (email, name) => {
         const res = await mailtrap_1.client.send({
             from: mailtrap_1.sender,
             to: recipient,
-            subject: 'Welcome to Foodie Faster',
+            subject: "Welcome to Foodie Faster",
             html: htmlContent,
             template_variables: {
                 company_info_name: "Foodie Faster",
                 name: name,
-            }
+            },
         });
     }
     catch (error) {
@@ -49,14 +48,14 @@ const sendPasswordResetEmail = async (email, resetURL) => {
         const res = await mailtrap_1.client.send({
             from: mailtrap_1.sender,
             to: recipient,
-            subject: 'Reset your password',
+            subject: "Reset your password",
             html: htmlContent,
-            category: "Reset Password"
+            category: "Reset Password",
         });
     }
     catch (error) {
         console.log(error);
-        throw new Error("Failed to send reset password email");
+        throw new Error("Failed to reset password");
     }
 };
 exports.sendPasswordResetEmail = sendPasswordResetEmail;
@@ -67,9 +66,9 @@ const sendResetSuccessEmail = async (email) => {
         const res = await mailtrap_1.client.send({
             from: mailtrap_1.sender,
             to: recipient,
-            subject: 'Password reset successfully',
+            subject: "Password Reset Successfully",
             html: htmlContent,
-            category: "Reset Password"
+            category: "Password Reset",
         });
     }
     catch (error) {

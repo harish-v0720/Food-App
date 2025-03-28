@@ -36,6 +36,7 @@ const HeroSection = () => {
       <div>
         <img src={HeroImage} className="object-cover w-full max-h-[500px] max-w-[90%]"/> 
       </div>
+      
     </div>
   );
 };

@@ -1,38 +1,42 @@
+import React, { ChangeEvent, FormEvent, useState } from "react";
+import { Link, Navigate, useNavigate } from "react-router-dom";
+import {  Loader2, LockKeyhole, Mail, PhoneCall, User } from "lucide-react";
+
+
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { SignupInputState, userSignupSchema } from "@/schema/userSchema";
-import {  Loader2, LockKeyhole, Mail, PhoneCall, User } from "lucide-react";
-import React, { ChangeEvent, useState } from "react";
-import { Link } from "react-router-dom";
-
-// type script 
-
-// type SignupInputState = {
-//   fullName: string;
-//   email: string;
-//   password: string;
-//   contact: number | null;
-// }
+import { useUserStore } from "@/store/useUserStore";
 
 const Signup = () => {
 
-  
+  //const loading = false;
 
   const [input, setInput] = useState<SignupInputState>({
     fullName: "",
     email: "",
     password: "",
     contact: "",
-  })
+    admin: false,
+  });
+
   const [errors, setErrors] = useState<Partial<SignupInputState>>({});
+  const {signup, loading} = useUserStore();
+  const navigate = useNavigate();
 
   const changeEventHandler = (e:ChangeEvent<HTMLInputElement>) => {
       const {name, value} = e.target;
       setInput({...input, [name]:value})
   }
 
-  const loginSubmitHandler = (e:FormEvent) => {
+  const toggleAdmin = () => {
+    setInput({...input, admin: !input.admin})
+  };
+
+  const loginSubmitHandler = async (e:FormEvent) => {
     e.preventDefault();
     // form validation check
     const result = userSignupSchema.safeParse(input);
@@ -42,11 +46,15 @@ const Signup = () => {
       return;
     }
     // login api implementation start here
-    console.log(input)
+    try {
+      await signup(input);
+      navigate("/verify-email")
+    } catch (error) {
+      navigate("/signup")
+      console.log(error)
+    }
+    
   }
-
-  const loading = false;
-
 
   return (
     <div className="flex items-center justify-center min-h-screen ">
@@ -109,6 +117,10 @@ const Signup = () => {
             <PhoneCall className="absolute inset-y-2 left-2 text-gray-500 pointer-events-none" />
             {errors && <span className="text-xs text-red-500">{errors.contact}</span>}
           </div>
+        </div>
+        <div className="mb-4 flex items-center">
+          <Checkbox onCheckedChange={toggleAdmin} className="mr-2"/>
+          <Label>Want to post your restaurant?</Label>
         </div>
         <div className="mb-10">
           {loading ? (

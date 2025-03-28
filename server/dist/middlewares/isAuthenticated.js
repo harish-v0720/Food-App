@@ -11,7 +11,7 @@ const isAuthenticated = async (req, res, next) => {
         if (!token) {
             return res.status(401).json({
                 success: false,
-                message: "User not authenticated"
+                message: "User not authenticated",
             });
         }
         // verify the token
@@ -29,7 +29,7 @@ const isAuthenticated = async (req, res, next) => {
     catch (error) {
         next(error);
         return res.status(500).json({
-            message: "Internal server error"
+            message: "Internal server error",
         });
     }
 };

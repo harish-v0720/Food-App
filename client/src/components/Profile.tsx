@@ -5,6 +5,7 @@ import { Input } from "./ui/input";
 
 import { Label } from "./ui/label";
 import { Button } from "./ui/button";
+import { useUserStore } from "@/store/useUserStore";
 
 // type ProfileDataState = {
 //   fullName: string;
@@ -16,19 +17,21 @@ import { Button } from "./ui/button";
 // }
 
 const Profile = () => {
+  const {user, updateProfile} = useUserStore();
+  const [isLoading, setIsLoading] = useState<boolean>(false)
   const [profileData, setProfileData] = useState({
-    fullName: "",
-    email: "",
-    address: "",
-    city: "",
-    country: "",
-    profilePicture: "",
+    fullName: user?.fullName || "",
+    email:user?.email || "",
+    address:user?.address || "",
+    city:user?.city || "",
+    country:user?.country || "",
+    profilePicture:user?.profilePicture || "",
   });
   const imageRef = useRef<HTMLInputElement | null>(null);
   const [selectedProfilePicture, setSelectedProfilePicture] =
-    useState<string>("");
+    useState<string>(profileData?.profilePicture ||"");
 
-  const loading = false;
+ 
 
   const fileChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -51,9 +54,18 @@ const Profile = () => {
     setProfileData({ ...profileData, [name]: value });
   };
 
-  const updateProfileHandler = (e: FormEvent<HTMLFormElement>) => {
+  const updateProfileHandler = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    //update profile api implementation
+    //update profile api implementation]
+    try {
+      setIsLoading(true)
+      await updateProfile(profileData)
+      setIsLoading(false)
+    } catch (error) {
+      setIsLoading(false)
+    }
+
+   
   };
 
   return (
@@ -72,12 +84,12 @@ const Profile = () => {
             />
             <div
               onClick={() => imageRef.current?.click()}
-              className="absolute inset-0 flex items-center justify-center"
+              className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-300 bg-black bg-opacity-50 rounded-full cursor-pointer"
             >
               <Plus className="text-white w-8 h-8" />
             </div>
           </Avatar>
-          <Input
+          <Input  
             type="text"
             name="fullName"
             value={profileData.fullName}
@@ -91,7 +103,7 @@ const Profile = () => {
           <Mail className="text-gray-500" />
           <div className="w-full">
             <Label>Email</Label>
-            <input name="email" value={profileData.email} onChange={changeHandler} className="w-full text-gray-600 bg-transparent focus-visible:ring-0 focus-visible:border-transparent outline-none" />
+            <input disabled name="email" value={profileData.email} onChange={changeHandler} className="w-full text-gray-600 bg-transparent focus-visible:ring-0 focus-visible:border-transparent outline-none" />
           </div>
         </div>
         <div className="flex items-center gap-4 rounded-sm p-2 bg-gray-200">
@@ -119,7 +131,7 @@ const Profile = () => {
       <div className="text-center">
         <div>
           {
-            loading? <Button disabled className="bg-orange hover:bg-hoverOrange"><Loader2 className="mr-2 w-4 h-4 animate-spin"/>Please Wait</Button> : <Button className="bg-orange hover:bg-hoverOrange">Update</Button>
+            isLoading? <Button disabled className="bg-orange hover:bg-hoverOrange"><Loader2 className="mr-2 w-4 h-4 animate-spin"/>Please Wait</Button> : <Button type="submit" className="bg-orange hover:bg-hoverOrange">Update</Button>
           }
            
         </div>

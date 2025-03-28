@@ -14,23 +14,10 @@ import { Loader2, Plus } from "lucide-react";
 import { FormEvent, useState } from "react";
 import EditMenu from "./EditMenu";
 import { MenuFormSchema, menuSchema } from "@/schema/menuSchema";
+import { useMenuStore } from "@/store/useMenuStore";
+import useRestaurantStore from "@/store/useRestaurantStore";
 
-const menus = [
-  {
-    name: "Biryani",
-    description: "Lorem uhehuhebf gufbg euhb.",
-    price: 140,
-    image:
-      "https://img.freepik.com/free-photo/delicious-food-table_23-2150857812.jpg",
-  },
-  {
-    name: "Biryani",
-    description: "Lorem uhehuhebf egufbg euhb.",
-    price: 140,
-    image:
-      "https://img.freepik.com/free-photo/delicious-food-table_23-2150857812.jpg",
-  },
-];
+
 
 const AddMenu = () => {
   const [input, setInput] = useState<MenuFormSchema>({
@@ -43,14 +30,17 @@ const AddMenu = () => {
   const [editOpen, setEditOpen] = useState<boolean>(false);
   const [error, setError] = useState<Partial<MenuFormSchema>>({})
   const [selectedMenu, setSelectedMenu] = useState<any>();
-  const loading = false;
+  const {loading, createMenu} = useMenuStore();
+  const {restaurant} = useRestaurantStore();
+
+  
 
   const changeEventHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type } = e.target;
     setInput({ ...input, [name]: type === "number" ? Number(value) : value });
   };
 
-  const submitHandler = (e: FormEvent<HTMLFormElement>) => {
+  const submitHandler = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const result = menuSchema.safeParse(input);
     if(!result.success){
@@ -60,7 +50,21 @@ const AddMenu = () => {
     }
 
     // api implementation
-  };
+  try {
+    const formData = new FormData();
+    formData.append("name", input.name);
+    formData.append("description", input.description);
+    formData.append("price", input.price.toString());
+    if(input.image){
+      formData.append("image", input.image);
+     } 
+     await createMenu(formData);
+     
+  }catch (error) {
+    console.log(error)
+  }
+
+};
   return (
     <div className="max-w-6xl mx-auto my-10">
       <div className="flex justify-between">
@@ -128,7 +132,7 @@ const AddMenu = () => {
                     })
                   }
                 />
-                {error && <span className="text-xs font-medium text-red-600">{error.image?.name || "Image is required"}</span>}
+                {error && <span className="text-xs font-medium text-red-600">{error.image?.name }</span>}
               </div>
               <DialogFooter className="mt-5">
                 {loading ? (
@@ -146,8 +150,8 @@ const AddMenu = () => {
           </DialogContent>
         </Dialog>
       </div>
-      {menus.map((menu: any, idx: number) => (
-        <div className="mt-6 space-y-4">
+      {restaurant?.menus.map((menu: any, idx: number) => (
+        <div key={idx} className="mt-6 space-y-4">
           <div className="flex flex-col md:flex-row md:items-center md:space-x-4 md:p-4 p-2 shadow-md rounded-lg border">
             <img
               src={menu.image}
